@@ -36,7 +36,39 @@ public class PeliculaData {
     public PeliculaData (DataSource dataSource) {
         this.dataSource = dataSource;
     }
-    
+
+
+    //Método para eliminar una noticia 
+    @Transactional(rollbackFor = Exception.class) 
+    public Pelicula delete(Pelicula pelicula) {
+        // Configura la llamada para eliminar la película
+        SimpleJdbcCall simpleJdbcCallPelicula = new SimpleJdbcCall(jdbcTemplate)
+                .withCatalogName("dbo")
+                .withProcedureName("Pelicula_Delete")
+                .withoutProcedureColumnMetaDataAccess()
+                .declareParameters(
+                    new SqlParameter("@pelicula_id", Types.INTEGER) // Parámetro de entrada
+                );
+
+        // Preparar los parámetros de entrada en un Map (evita errores de orden)
+        Map<String, Object> inParameters = new HashMap<>();
+        inParameters.put("@pelicula_id", pelicula.getPeliculaId());
+
+        // Ejecutar el procedimiento
+        Map<String, Object> outParameters = simpleJdbcCallPelicula.execute(inParameters);
+
+        //Tabla PeliculaActor
+        SimpleJdbcCall simpleJdbcCallPeliculaActor = new SimpleJdbcCall(jdbcTemplate).
+                    withCatalogName("dbo").
+                    withProcedureName("PeliculaActor_Delete").withoutProcedureColumnMetaDataAccess().
+                    declareParameters(new SqlParameter("@pelicula_id", Types.INTEGER)).
+                    declareParameters(new SqlParameter("@actor_id", Types.INTEGER));
+
+            for(Actor actor:pelicula.getActores())
+                simpleJdbcCallPeliculaActor.execute(pelicula.getPeliculaId(), actor.getActorId());
+
+        return pelicula;
+    }
 
     public List<Pelicula> findMoviesByTitleOrGenre(String title, String genre) {
         String sqlSelect = """
