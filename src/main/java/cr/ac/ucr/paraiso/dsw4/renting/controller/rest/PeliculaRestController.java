@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +31,7 @@ public class PeliculaRestController {
     @Autowired
     private PeliculaBusiness peliculaBusiness;
  
-@Autowired
+    @Autowired
    private PeliculaMapper peliculaMapper; // Inject the mapper
 	
 	@PostMapping
@@ -54,6 +55,15 @@ public class PeliculaRestController {
        return new ResponseEntity<>(pelicula, HttpStatus.CREATED);
    }
 
+   @DeleteMapping()
+   public ResponseEntity<Pelicula> delete(@RequestBody Pelicula pelicula){
+        if(pelicula.getPeliculaId() == 0){
+            return new ResponseEntity<>(pelicula, HttpStatus.BAD_REQUEST); 
+        }else{
+            peliculaBusiness.delete(pelicula); 
+            return new ResponseEntity<>(pelicula, HttpStatus.OK); 
+        }
+   }
 
  
     @GetMapping()

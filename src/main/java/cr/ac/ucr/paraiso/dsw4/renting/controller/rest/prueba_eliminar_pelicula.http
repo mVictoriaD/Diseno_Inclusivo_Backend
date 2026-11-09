@@ -1,0 +1,19 @@
+@baseUrl = http://localhost:8084/renting
+
+### Eliminar pelicula
+DELETE {{baseUrl}}/peliculas
+Accept: application/json
+Content-Type: application/json
+
+{
+  "peliculaId": 1,
+  "titulo": "Operación Relámpago",
+  "subtitulada": false,
+  "estreno": true ,
+  "genero": { "generoId": 1},
+  "actores": [
+    { "actorId": 1 },
+    { "actorId": 3}
+  ]
+}
+

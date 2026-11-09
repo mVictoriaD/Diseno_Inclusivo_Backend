@@ -19,10 +19,15 @@ public class PeliculaBusiness {
     public List<Pelicula> findMoviesByTitleOrGenre(String title, String genre) {
         return peliculaData.findMoviesByTitleOrGenre(title, genre);
     }
-     public Pelicula save(Pelicula pelicula) throws SQLException{
+    
+    public Pelicula save(Pelicula pelicula) throws SQLException{
         peliculaData.save(pelicula);
         return pelicula;
     }
 
+    public Pelicula delete(Pelicula pelicula){
+        peliculaData.delete(pelicula); 
+        return pelicula; 
+    }
 
 }
