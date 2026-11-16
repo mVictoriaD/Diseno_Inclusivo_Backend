@@ -41,6 +41,19 @@ public class PeliculaData {
     //Método para eliminar una noticia 
     @Transactional(rollbackFor = Exception.class) 
     public Pelicula delete(Pelicula pelicula) {
+        // Primero se borran las filas de PeliculaActor: dependen de la película, y si la película
+        // se borra antes, la llave foránea lo impide. Si no vienen actores, no se recorre nada.
+        SimpleJdbcCall simpleJdbcCallPeliculaActor = new SimpleJdbcCall(jdbcTemplate).
+                    withCatalogName("dbo").
+                    withProcedureName("PeliculaActor_Delete").withoutProcedureColumnMetaDataAccess().
+                    declareParameters(new SqlParameter("@pelicula_id", Types.INTEGER)).
+                    declareParameters(new SqlParameter("@actor_id", Types.INTEGER));
+
+        if (pelicula.getActores() != null) {
+            for (Actor actor : pelicula.getActores())
+                simpleJdbcCallPeliculaActor.execute(pelicula.getPeliculaId(), actor.getActorId());
+        }
+
         // Configura la llamada para eliminar la película
         SimpleJdbcCall simpleJdbcCallPelicula = new SimpleJdbcCall(jdbcTemplate)
                 .withCatalogName("dbo")
@@ -55,17 +68,7 @@ public class PeliculaData {
         inParameters.put("@pelicula_id", pelicula.getPeliculaId());
 
         // Ejecutar el procedimiento
-        Map<String, Object> outParameters = simpleJdbcCallPelicula.execute(inParameters);
-
-        //Tabla PeliculaActor
-        SimpleJdbcCall simpleJdbcCallPeliculaActor = new SimpleJdbcCall(jdbcTemplate).
-                    withCatalogName("dbo").
-                    withProcedureName("PeliculaActor_Delete").withoutProcedureColumnMetaDataAccess().
-                    declareParameters(new SqlParameter("@pelicula_id", Types.INTEGER)).
-                    declareParameters(new SqlParameter("@actor_id", Types.INTEGER));
-
-            for(Actor actor:pelicula.getActores())
-                simpleJdbcCallPeliculaActor.execute(pelicula.getPeliculaId(), actor.getActorId());
+        simpleJdbcCallPelicula.execute(inParameters);
 
         return pelicula;
     }
@@ -93,10 +96,13 @@ public class PeliculaData {
                     or LOWER(g.nombre_genero) LIKE ?
                 """;
                 //title = title.toLowerCase();
-                genre = genre.toLowerCase();
+                String titulo = (title == null ? "" : title.trim().toLowerCase());
+                String genero = (genre == null ? "" : genre.trim().toLowerCase());
 
-                String titleLike = (title == null || title == "" ? "" : "%" + title.trim() + "%");
-                String genreLike = (genre == null || genre == "" ? "" : "%" + genre.trim() + "%");
+                // Sin filtros se muestran todas las películas; con un filtro vacío ese criterio no coincide
+                boolean sinFiltros = titulo.isEmpty() && genero.isEmpty();
+                String titleLike = sinFiltros ? "%" : (titulo.isEmpty() ? "" : "%" + titulo + "%");
+                String genreLike = sinFiltros ? "%" : (genero.isEmpty() ? "" : "%" + genero + "%");
         return jdbcTemplate.query(sqlSelect, new PeliculaExtractor(), titleLike, genreLike);
     }// findMoviesByTitleOrGenre
 
